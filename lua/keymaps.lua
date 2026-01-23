@@ -55,10 +55,17 @@ vim.keymap.set('n', '<leader>r', ':Neotree reveal<cr>', { desc = '[R]eveal Files
 vim.keymap.set('n', '<leader>tb', ':Neotree toggle show buffers<cr>', { desc = '[T]oggle [B]uffers' })
 
 vim.keymap.set('n', '<leader>q', ':q<cr>', { desc = '[Q]uit' })
+vim.keymap.set('n', '<leader>Q', '<cmd>q!<cr>', { desc = '[Q]quit Force' })
 vim.keymap.set('n', '<leader>w', ':w<cr>', { desc = '[W]rite' })
 
-vim.keymap.set({ 'n', 'v' }, '<leader>/', function()
+vim.keymap.set('n', '<leader>/', function()
   require('Comment.api').toggle.linewise.current()
+end, { desc = '[C]omment Line' })
+
+vim.keymap.set('x', '<leader>/', function()
+  local esc = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
+  vim.api.nvim_feedkeys(esc, 'nx', false)
+  require('Comment.api').toggle.linewise(vim.fn.visualmode())
 end, { desc = '[C]omment Line' })
 
 vim.keymap.set({ 'n', 'v' }, '<leader>cl', function()
@@ -67,6 +74,12 @@ end, { desc = '[C]omment [L]ine' })
 
 vim.keymap.set({ 'n', 'v' }, '<leader>cb', function()
   require('Comment.api').toggle.blockwise.current()
+end, { desc = '[C]omment [B]lock' })
+
+vim.keymap.set('x', '<leader>cb', function()
+  local esc = vim.api.nvim_replace_termcodes('<ESC>', true, false, true)
+  vim.api.nvim_feedkeys(esc, 'nx', false)
+  require('Comment.api').toggle.blockwise(vim.fn.visualmode())
 end, { desc = '[C]omment [B]lock' })
 
 vim.keymap.set({ 'n', 't' }, '<leader>tt', '<cmd>ToggleTerm<cr>', { desc = '[T]oggle [T]erminal' })
