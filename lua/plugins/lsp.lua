@@ -28,6 +28,7 @@ return {
         'prettier',
         'stylua',
         'eslint_d',
+        'jsonlint',
       },
     },
   },

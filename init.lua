@@ -19,6 +19,7 @@ require('lazy').setup({
   require 'plugins.mini',
   require 'plugins.lualine',
   require 'plugins.todo-comments',
+  require 'plugins.highlight-colors',
   require 'plugins.conform',
   require 'plugins.blink-cmp',
   require 'plugins.treesitter',
