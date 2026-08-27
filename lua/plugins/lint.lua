@@ -9,6 +9,8 @@ return {
       typescript = { 'eslint_d' },
       jsx = { 'eslint_d' },
       tsx = { 'eslint_d' },
+      cs = { 'roslyn_ls' },
+      razor = { 'roslyn_ls' },
     }
   end,
 }
