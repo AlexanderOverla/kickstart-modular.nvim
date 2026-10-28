@@ -7,14 +7,24 @@ vim.pack.add {
   'https://github.com/MunifTanjim/nui.nvim',
 }
 
-vim.keymap.set('n', '\\', '<Cmd>Neotree reveal<CR>', { desc = 'NeoTree reveal', silent = true })
+-- Keymaps for Neo-tree
+vim.keymap.set('n', '<leader>e', ':Neotree toggle<cr>', { desc = '[E]xplore Files' })
+vim.keymap.set('n', '<leader>r', ':Neotree reveal<cr>', { desc = '[R]eveal Files' })
+-- Using telescope instead of neotree to see buffers
+-- vim.keymap.set('n', '<leader>tb', ':Neotree toggle show buffers<cr>', { desc = '[T]oggle [B]uffers' })
 
 require('neo-tree').setup {
-  filesystem = {
-    window = {
-      mappings = {
-        ['\\'] = 'close_window',
-      },
+  event_handlers = {
+    {
+      event = 'file_opened',
+      handler = function() require('neo-tree.command').execute { action = 'close' } end,
     },
   },
+  -- filesystem = {
+  --   window = {
+  --     mappings = {
+  --       ['\\'] = 'close_window',
+  --     },
+  --   },
+  -- },
 }

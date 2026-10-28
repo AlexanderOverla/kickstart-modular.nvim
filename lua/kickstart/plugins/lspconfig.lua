@@ -103,17 +103,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
 --  See `:help lsp-config` for information about keys and how to configure
 ---@type table<string, vim.lsp.Config>
 local servers = {
-  -- clangd = {},
-  -- gopls = {},
-  -- pyright = {},
-  -- tsc = {},
-  --
-  -- Some languages (like rust) have entire language plugins that can be useful:
-  --    https://github.com/mrcjkb/rustaceanvim
-  --
-  -- But for many setups, the LSP (`rust_analyzer`) will work just fine
-  -- rust_analyzer = {},
-
   stylua = {}, -- Used to format Lua code
 
   -- Special Lua Config, as recommended by neovim help docs
@@ -147,6 +136,108 @@ local servers = {
       },
     },
   },
+
+  -- ts_ls Typescript configuration
+  ts_ls = {
+    settings = {
+      typescript = {
+        inlayHints = {
+          includeInlayParameterNameHints = 'literal',
+          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayVariableTypeHints = false,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayEnumMemberValueHints = true,
+        },
+      },
+      javascript = {
+        inlayHints = {
+          includeInlayParameterNameHints = 'all',
+          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayEnumMemberValueHints = true,
+        },
+      },
+    },
+  },
+
+  roslyn_ls = {
+    on_init = {
+      function(client)
+        local root_dir = client.config.root_dir
+        local fs = vim.fs
+        local solutions = {}
+
+        ---@param target string
+        local function on_init_sln(target)
+          vim.notify('Initializing: ' .. target, vim.log.levels.TRACE, { title = 'roslyn_ls' })
+          ---@diagnostic disable-next-line: param-type-mismatch
+          client:notify('solution/open', {
+            solution = vim.uri_from_fname(target),
+          })
+        end
+
+        ---@param project_files string[]
+        local function on_init_project(project_files)
+          vim.notify('Initializing: projects', vim.log.levels.TRACE, { title = 'roslyn_ls' })
+          ---@diagnostic disable-next-line: param-type-mismatch
+          client:notify('project/open', {
+            projects = vim.tbl_map(function(file) return vim.uri_from_fname(file) end, project_files),
+          })
+        end
+
+        -- try load first solution we find
+        for entry, type in fs.dir(root_dir) do
+          if type == 'file' and (vim.endswith(entry, '.sln') or vim.endswith(entry, '.slnx')) then
+            table.insert(solutions, entry)
+            -- on_init_sln(client, fs.joinpath(root_dir, entry))
+          end
+        end
+
+        if #solutions > 0 then
+          for _, solution in ipairs(solutions) do
+            if solution == 'Lumen.slnx' or solution == 'Lumen.sln' then
+              on_init_sln(fs.joinpath(root_dir, solution))
+              return
+            end
+          end
+          on_init_sln(fs.joinpath(root_dir, solutions[0]))
+          return
+        end
+
+        -- if no solution is found load project
+        for entry, type in fs.dir(root_dir) do
+          if type == 'file' and vim.endswith(entry, '.csproj') then
+            on_init_project { fs.joinpath(root_dir, entry) }
+            return
+          end
+        end
+      end,
+    },
+    settings = {
+      ['csharp|inlay_hints'] = {
+        csharp_enable_inlay_hints_for_implicit_object_creation = true,
+        csharp_enable_inlay_hints_for_implicit_variable_types = true,
+        csharp_enable_inlay_hints_for_lambda_parameter_types = true,
+        csharp_enable_inlay_hints_for_types = true,
+        dotnet_enable_inlay_hints_for_indexer_parameters = true,
+        dotnet_enable_inlay_hints_for_literal_parameters = true,
+        dotnet_enable_inlay_hints_for_object_creation_parameters = true,
+        dotnet_enable_inlay_hints_for_other_parameters = true,
+        dotnet_enable_inlay_hints_for_parameters = true,
+        dotnet_suppress_inlay_hints_for_parameters_that_differ_only_by_suffix = true,
+        dotnet_suppress_inlay_hints_for_parameters_that_match_argument_name = true,
+        dotnet_suppress_inlay_hints_for_parameters_that_match_method_intent = true,
+      },
+      ['csharp|code_lens'] = {
+        dotnet_enable_references_code_lens = true,
+      },
+    },
+  },
 }
 
 vim.pack.add {
@@ -161,7 +252,7 @@ require('mason').setup {}
 
 -- Translates between nvim-lspconfig server names and mason.nvim package names (e.g. lua_ls <-> lua-language-server)
 require('mason-lspconfig').setup {
-  automatic_enable = false, -- Change this to true if you want to automatically enable servers that are installed manually (e.g. via :Mason / :MasonInstall)
+  automatic_enable = true, -- Change this to true if you want to automatically enable servers that are installed manually (e.g. via :Mason / :MasonInstall)
 }
 
 -- Ensure the servers and tools above are installed
@@ -174,6 +265,16 @@ require('mason-lspconfig').setup {
 local ensure_installed = vim.tbl_keys(servers or {})
 vim.list_extend(ensure_installed, {
   -- You can add other tools here that you want Mason to install
+  'prettierd',
+  'prettier',
+  'stylua',
+  'eslint_d',
+  'jsonlint',
+  'lua_ls',
+  'ts_ls',
+  'tailwindcss',
+  'eslint',
+  'roslyn_ls',
 })
 
 require('mason-tool-installer').setup { ensure_installed = ensure_installed }
